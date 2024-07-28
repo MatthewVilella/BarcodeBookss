@@ -1,0 +1,36 @@
+{
+  "name": "newbookapp",
+  "version": "1.0.0",
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^14.0.0",
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-navigation/native": "^6.1.9",
+    "@react-navigation/stack": "^6.3.20",
+    "axios": "^1.6.2",
+    "expo": "^51.0.0",
+    "expo-barcode-scanner": "~13.0.1",
+    "expo-camera": "~15.0.8",
+    "expo-cli": "^6.3.10",
+    "expo-status-bar": "~1.12.1",
+    "firebase": "^10.7.1",
+    "react": "18.2.0",
+    "react-native": "0.74.1",
+    "react-native-dotenv": "^3.4.11",
+    "react-native-elements": "^3.4.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@types/firebase": "^3.2.1",
+    "@types/react": "~18.2.79",
+    "@types/react-native": "^0.72.7",
+    "typescript": "~5.3.3"
+  },
+  "private": true
+}
