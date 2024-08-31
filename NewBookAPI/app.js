@@ -1,4 +1,3 @@
-// Importing required dependencies for the application
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
@@ -40,7 +39,7 @@ const fetchUpcApi = async (findBookUrl, userUID, userScanning) => {
     catch (error) { console.error("Error fetching book data:", error); }
 };
 
-// Function to fetch book details from Google Books API and handle Firestore operations
+// Fetch book details from Google Books API and handle Firestore operations
 const googleBooks = async (title, publisher, image, userUID, userScanning) => {
     try {
         const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${title}`);
@@ -58,6 +57,7 @@ const googleBooks = async (title, publisher, image, userUID, userScanning) => {
             image: image,
         };
 
+        // Compare titles and select the closest match
         if (fetchedData && fetchedData.items) {
             fetchedData.items.forEach(item => {
                 const distance = natural.LevenshteinDistance(item.volumeInfo.title, title);
@@ -81,42 +81,45 @@ const googleBooks = async (title, publisher, image, userUID, userScanning) => {
     catch (error) { console.error("Error fetching Google Books data:", error); };
 };
 
-// Function to handle Firestore operations for adding or updating book data
+// Add or update book data in Firestore
 const handleFirestoreOperations = async (book, userUID, userScanning) => {
     try {
         const bookDocument = await fireBase.collection("bookIndex").doc(book.title).get();
         const usersBookDocument = await fireBase.collection("userUID").doc(userUID).collection(userScanning).doc(book.title).get();
 
+        // Add book to user's collection if it exists in the index but not in the user's collection
         if (bookDocument.exists && !usersBookDocument.exists) {
             const firebaseBook = bookDocument.data().title;
             await fireBase.collection("userUID").doc(userUID).collection(userScanning).doc(firebaseBook).set({ Title: firebaseBook });
         }
-        else if (!usersBookDocument.exists) { await fireBase.collection("userUID").doc(userUID).collection(userScanning).doc(book.title).set({ Title: book.title }); }
+        // Add book to both the index and user's collection if it doesn't exist in either
+        else if (!usersBookDocument.exists) { await fireBase.collection("userUID").doc(userUID).collection(userScanning).doc(book.title).set({ Title: book.title }); };
 
-        if (!bookDocument.exists) { await fireBase.collection("bookIndex").doc(book.title).set(book); }
+        // Add book to the index if it doesn't exist
+        if (!bookDocument.exists) { await fireBase.collection("bookIndex").doc(book.title).set(book); };
     }
-    catch (error) { console.error("Error handling Firestore operations:", error); }
+    catch (error) { console.error("Error handling Firestore operations:", error); };
 };
 
-// Function to delete a book from the user's database
+// Delete a book from a user's collection in Firestore
 const deleteBook = async (fireBase, userUID, userDeletingItem, bookTitle) => {
     try { await fireBase.collection("userUID").doc(userUID).collection(userDeletingItem).doc(bookTitle).delete(); }
     catch (error) { console.error("Error deleting book:", error); };
 };
 
-// Function to add a book to the user's favorites
+// Add a book to a user's favorites in Firestore
 const addToFavorites = async (fireBase, userUID, userDeletingItem, bookTitle) => {
     try { await fireBase.collection("userUID").doc(userUID).collection(userDeletingItem).doc(bookTitle).update({ ["Favorites"]: bookTitle }); }
     catch (error) { console.error("Error adding book to favorites:", error); };
 };
 
-// Function to remove a book from the user's favorites
+// Remove a book from a user's favorites in Firestore
 const removeFromFavorites = async (fireBase, userUID, userDeletingItem, bookTitle) => {
     const docRef = fireBase.collection("userUID").doc(userUID).collection(userDeletingItem).doc(bookTitle);
     const res = await docRef.update({ Favorites: admin.firestore.FieldValue.delete() });
 };
 
-// Function to delete a user's entire database
+// Delete a user's entire database
 async function deleteUsersDataBase(userUID, userDeleting) {
     const deleteCollectionRef = fireBase.collection("userUID").doc(userUID).collection(userDeleting);
     const querySnapshot = await deleteCollectionRef.get();
@@ -131,7 +134,7 @@ app.get("/", (req, res) => {
     res.json("API is running and is all good")
 });
 
-// Route handler to add a book to the database
+// Route to add a book to the database using UPC
 app.post(`${config.ROUTE_ONE}`, (req, res) => {
     const { Upc, userUID, User } = req.body;
     const findBookUrl = `${url}${Upc}`;
@@ -144,7 +147,7 @@ app.post(`${config.ROUTE_ONE}`, (req, res) => {
         });
 });
 
-// Route handler to delete a book from the database
+// Route to delete a book from a user's collection
 app.post(`${config.ROUTE_TWO}`, (req, res) => {
     const { userUidDeleting, userDeleting, deleteBook: bookTitle } = req.body;
 
@@ -156,7 +159,7 @@ app.post(`${config.ROUTE_TWO}`, (req, res) => {
         });
 });
 
-// Route handler to add a book to the user's favorites
+// Route to add a book to the user's favorites
 app.post(`${config.ROUTE_THREE}`, (req, res) => {
     const { userUidDeleting, userDeleting, deleteBook: bookTitle } = req.body;
 
@@ -168,7 +171,7 @@ app.post(`${config.ROUTE_THREE}`, (req, res) => {
         });
 });
 
-// Route handler to remove a book from the user's favorites
+// Route to remove a book from the user's favorites
 app.post(`${config.ROUTE_FOUR}`, async (req, res) => {
     const { userUidDeleting, userDeleting, deleteBook: bookTitle } = req.body;
 
@@ -179,10 +182,10 @@ app.post(`${config.ROUTE_FOUR}`, async (req, res) => {
     catch (error) {
         console.error('Error removing from favorites:', error);
         res.status(500).send({ error: 'Failed to remove from favorites' });
-    }
+    };
 });
 
-// Route handler to delete a user's data from Firestore database
+// Route to delete a user's entire collection in Firestore
 app.post(`${config.ROUTE_FIVE}`, async (req, res) => {
     let requestBody = req.body;
 
@@ -197,14 +200,14 @@ app.post(`${config.ROUTE_FIVE}`, async (req, res) => {
 });
 
 
-// Route handler to set up Firestore collection reference for accessing user-specific data
+// Route to set up Firestore collection reference for accessing user-specific data
 app.post(`${config.ROUTE_SIX}`, (req, res, next) => {
     let requestBody = req.body;
     collectionRef = fireBase.collection("userUID").doc(requestBody.userUID).collection(requestBody.user);
     next();
 });
 
-// Route handler to retrieve user-specific data from the Firestore database and send it as a response
+// Route to retrieve user-specific data from Firestore
 app.get(`${config.ROUTE_SEVEN}`, (req, res) => {
     let returnUpcItemDetails = [];
     let filterDuplicates = [];
@@ -223,10 +226,10 @@ app.get(`${config.ROUTE_SEVEN}`, (req, res) => {
 
 // Endpoint to post titles and retrieve data from Firestore database
 app.post(`${config.ROUTE_EIGHT}`, async (req, res) => {
-    try {
-        const titlesArray = req.body.titles;
-        const titles = titlesArray.map(titleObj => titleObj.title);
+    const titlesArray = req.body.titles;
+    const titles = titlesArray.map(titleObj => titleObj.title).filter(title => title !== undefined);
 
+    try {
         storedTitles = titles;
 
         const booksData = [];
@@ -251,8 +254,6 @@ app.get(`${config.ROUTE_NINE}`, async (req, res) => {
     try {
         const booksData = [];
 
-        if (storedTitles.length === 0) { return res.status(400).json({ error: 'No titles available from previous POST request' }); }
-
         const collectionRef = admin.firestore().collection("bookIndex");
         const querySnapshot = await collectionRef.where(admin.firestore.FieldPath.documentId(), "in", storedTitles).get();
 
@@ -268,7 +269,6 @@ app.get(`${config.ROUTE_NINE}`, async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     };
 });
-
 
 
 // Setting up Express to parse incoming requests as JSON and handle URL-encoded data

@@ -70,7 +70,6 @@ const Settings: React.FC<{ navigation: any }> = ({ navigation }) => {
         setTheme(themes);
     };
 
-
     return (
         <SafeAreaProvider>
             <SafeAreaView style={chooseTheme(styles, darkTheme, lightTheme).container}>
@@ -119,7 +118,6 @@ const Settings: React.FC<{ navigation: any }> = ({ navigation }) => {
         </SafeAreaProvider>
     );
 };
-
 
 const styles = StyleSheet.create({
     container: {
@@ -282,8 +280,6 @@ const lightTheme = StyleSheet.create({
         paddingRight: 5,
     },
 });
-
-
 
 
 export default Settings;

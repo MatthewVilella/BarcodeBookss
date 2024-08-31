@@ -5,8 +5,6 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { useGlobal } from "../GlobalProvider";
 import axios from "axios";
 import { Camera, CameraType, FlashMode, BarCodeScanningResult } from "expo-camera/legacy";
-import { useFocusEffect } from "@react-navigation/native";
-import { Button } from "react-native-elements";
 import { ROUTE_ONE, ROUTE_PORT } from '@env';
 
 const Scanner: React.FC<{ navigation: any, closeScanner: any, }> = ({ navigation, closeScanner, }) => {
@@ -22,7 +20,6 @@ const Scanner: React.FC<{ navigation: any, closeScanner: any, }> = ({ navigation
 
     // Function for barcode scanning
     const handleBarCodeScanned: (scanningResult: CustomBarCodeScanningResult) => void = (scanningResult) => {
-        // const { type, data } = scanningResult;
         if (startScanning) {
             setScanned(true);
             //If barcode type is 32 the scan if not return.
@@ -30,9 +27,11 @@ const Scanner: React.FC<{ navigation: any, closeScanner: any, }> = ({ navigation
                 setStartScanning(false);
                 let usersScannedData = { Upc: scanningResult.data, User: email, userUID: UID };
 
+                if (Object.values(usersScannedData).some(value => value === undefined || value === null)) { return; };
+
                 // Send scanned data to the server using axios
                 const postScannedData = async () => {
-                    try { const res = await axios.post(`http://${ROUTE_PORT}${ROUTE_ONE}`, usersScannedData); }
+                    try { const res = await axios.post(`http://${ROUTE_PORT}${ROUTE_ONE}`, usersScannedData); setUpdateBookInfo(true); }
                     catch (error) { console.log(error); };
                     setStartScanning(true);
                 };
@@ -48,7 +47,7 @@ const Scanner: React.FC<{ navigation: any, closeScanner: any, }> = ({ navigation
                 );
             }
             else { Alert.alert("Item Scanned", "Not a Book", [{ text: "Close", onPress: () => setStartScanning(true) }]); };
-        }
+        };
     };
 
     // Toggle the torch (flashlight) on/off
@@ -60,15 +59,6 @@ const Scanner: React.FC<{ navigation: any, closeScanner: any, }> = ({ navigation
     // Reference to the camera component
     const cameraRef = useRef(null);
 
-
-    const toggleTorch222222 = () => {
-
-        setUpdateBookInfo(true)
-        closeScanner
-
-
-    };
-
     // Request camera and flash permissions on component mount
     useEffect(() => {
         (async () => {
@@ -77,7 +67,6 @@ const Scanner: React.FC<{ navigation: any, closeScanner: any, }> = ({ navigation
 
             setHasCameraPermission(cameraStatus.status === "granted");
             setHasFlashPermission(flashStatus.status === "granted");
-            console.log(`Camera Permission: ${cameraStatus.status}, Flash Permission: ${flashStatus.status}`); // Debug log
         })();
     }, []);
 
@@ -86,18 +75,9 @@ const Scanner: React.FC<{ navigation: any, closeScanner: any, }> = ({ navigation
         return <TouchableOpacity onPress={closeScanner}>
             <Text>Requesting for camera and flashlight permissions</Text>
         </TouchableOpacity>;
-
     };
 
     if (hasCameraPermission === false || hasFlashPermission === false) { return <Text>No access to camera or flashlight</Text>; };
-
-
-
-
-
-
-
-
 
     return (
         <SafeAreaProvider>
@@ -130,7 +110,6 @@ const Scanner: React.FC<{ navigation: any, closeScanner: any, }> = ({ navigation
                 </View>
 
                 {/* Camera component for barcode scanning */}
-                {/* {hasCameraPermission && hasFlashPermission && ( */}
                 <Camera
                     ref={cameraRef}
                     type={cameraType}
@@ -138,8 +117,6 @@ const Scanner: React.FC<{ navigation: any, closeScanner: any, }> = ({ navigation
                     onBarCodeScanned={handleBarCodeScanned as (scanningResult: BarCodeScanningResult) => void}
                     style={StyleSheet.absoluteFillObject}
                 />
-                {/* // )} */}
-
 
                 <View style={styles.crosshairContainer}>
                     {/* Crosshair design for better barcode scanning */}

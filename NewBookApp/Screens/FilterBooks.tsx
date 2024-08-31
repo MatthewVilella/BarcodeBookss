@@ -21,7 +21,8 @@ const FilterBooks: React.FC<{ navigation: any, }> = ({ navigation, }) => {
     setIsCheckedCategories,
     setIsCheckedPublishedDate,
     setIsCheckedPublisher,
-    chooseTheme, filterFavorites
+    chooseTheme,
+    filterFavorites,
   } = useGlobal();
   const [search, setSearch] = useState<string>("");
   const [filterModal2, setFilterModal2] = useState<boolean>(false);
@@ -37,17 +38,17 @@ const FilterBooks: React.FC<{ navigation: any, }> = ({ navigation, }) => {
         bookInfo.books.forEach((book: { title: string; image: any; }) => {
           if (favoriteTitles.includes(book.title)) {
             const existsInImageData = imageData.some(obj => Object.keys(obj).includes(book.title));
-            if (!existsInImageData) { imageData.push({ [book.title]: book.image }); }
-          }
+            if (!existsInImageData) { imageData.push({ [book.title]: book.image }); };
+          };
         });
         continue;
-      }
+      };
 
       if (bookInfo.books[i][filterProperty].includes(filterValue)) {
         const existsInImageData = imageData.some(obj => Object.keys(obj).includes(bookInfo.books[i].title));
         if (!existsInImageData) { imageData.push({ [bookInfo.books[i].title]: bookInfo.books[i].image }); };
-      }
-    }
+      };
+    };
     setDataSource(imageData);
     navigation.navigate("Collection");
   };
@@ -84,7 +85,6 @@ const FilterBooks: React.FC<{ navigation: any, }> = ({ navigation, }) => {
   function ListViewItemSeparator() { return (<View style={chooseTheme(styles, darkTheme, lightTheme).itemSeparator} />); };
 
   const openFilterModel = () => { setFilterModal2(true); };
-  // const closeBookFilter = () => { setFilterModal2(false); };
 
   const closeFilter = () => {
     setIsCheckedFavorites(false);

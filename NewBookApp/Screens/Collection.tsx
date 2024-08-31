@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Modal, Image, } from "react-native";
 import { SearchBar } from "react-native-elements";
-import { MaterialCommunityIcons, Ionicons, AntDesign } from "@expo/vector-icons";
+import { MaterialCommunityIcons, Ionicons, AntDesign, Foundation } from "@expo/vector-icons";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import Scanner from "./Scanner"
 import { useGlobal } from "../GlobalProvider"
@@ -38,12 +38,14 @@ const Collection: React.FC<{ navigation: any }> = ({ navigation }) => {
     setFilterFavorites,
     startInterval,
     apiPostUser,
-    updateBookInfo, setUpdateBookInfo
+    updateBookInfo,
+    setUpdateBookInfo,
   } = useGlobal();
 
   const [search, setSearch] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filterModal, setFilterModal] = useState<boolean>(false);
+  const filteredDataSource: any = dataSource.filter(item => !('title' in item));
 
   let bookData: BookData = {
     title: '',
@@ -77,8 +79,11 @@ const Collection: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const fetchBooks = async () => {
     let bookTitles = { titles: arrayHolder };
+    let hasUndefinedOrNull = bookTitles.titles.some(title => title === undefined || title === null);
+    if (hasUndefinedOrNull || bookTitles.titles.length == 0) { return };
+
     try { const res = await axios.post(`http://${ROUTE_PORT}${ROUTE_EIGHT}`, bookTitles); }
-    catch (error) { console.log(error); };
+    catch (error) { return console.log(error); };
   };
 
   const fetchBookDetails = async (): Promise<void> => {
@@ -91,7 +96,18 @@ const Collection: React.FC<{ navigation: any }> = ({ navigation }) => {
       let publisherData: { [key: string]: string }[] = [];
       let publishedDateData: { [key: string]: string }[] = [];
 
+      // console.log(responseJson)
+
       if (responseJson && responseJson.books && responseJson.books.length > 0) {
+        // const fields = ['categories', 'publisher', 'title', 'publishedDate', 'authors'];
+
+        // const allUndefined = fields.every(field => responseJson.books[field] === undefined);
+
+        // if (allUndefined) {
+        //     return
+        // }
+
+
         setBookInfo(responseJson);
 
         responseJson.books.forEach((book: { title: string; image: string; categories?: string[]; authors?: string[]; publisher: string, publishedDate: string }) => {
@@ -99,20 +115,37 @@ const Collection: React.FC<{ navigation: any }> = ({ navigation }) => {
 
           if (Array.isArray(book.categories)) {
             book.categories.forEach((category: string) => {
-              if (!categoriesData.some(obj => Object.values(obj).includes(category))) { categoriesData.push({ [category]: category, categories: 'categories' }); };
+              if (!categoriesData.some(obj => Object.values(obj).includes(category))) {
+                categoriesData.push({ [category]: category, categories: 'categories' });
+              };
             });
+          }
+          else if (typeof book.categories === 'string') {
+            const category = book.categories;
+            if (!categoriesData.some(obj => Object.values(obj).includes(category))) {
+              categoriesData.push({ [category]: category, categories: 'categories' });
+            };
           };
 
           if (Array.isArray(book.authors)) {
             book.authors.forEach((author: string) => {
-              if (!authorsData.some(obj => Object.values(obj).includes(author))) { authorsData.push({ [author]: author, authors: 'authors' }); };
+              if (!authorsData.some(obj => Object.values(obj).includes(author))) {
+                authorsData.push({ [author]: author, authors: 'authors' });
+              };
             });
+          }
+          else if (typeof book.authors === 'string') {
+            const author = book.authors;
+            if (!authorsData.some(obj => Object.values(obj).includes(author))) {
+              authorsData.push({ [author]: author, authors: 'authors' });
+            };
           };
 
           if (!publisherData.some(obj => Object.values(obj).includes(book.publisher))) { publisherData.push({ [book.publisher]: book.publisher, publisher: 'publisher' }); };
 
           if (!publishedDateData.some(obj => Object.values(obj).includes(book.publishedDate))) { publishedDateData.push({ [book.publishedDate]: book.publishedDate, publishedDate: 'publishedDate' }); };
         });
+
         setFilterAuthors(authorsData);
         setFilterCategories(categoriesData);
         setFilterPublisher(publisherData);
@@ -142,12 +175,12 @@ const Collection: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   useEffect(() => {
-    if (!updateBookInfo) {
+    if (updateBookInfo == true) {
       apiPostUser();
       fetchUsersDataBase();
       setDataSource(arrayHolder);
     };
-  }, [ updateBookInfo]);
+  }, [updateBookInfo, scannerModal,]);
 
   useEffect(() => {
     fetchBooks();
@@ -155,7 +188,6 @@ const Collection: React.FC<{ navigation: any }> = ({ navigation }) => {
     setDataSource(arrayHolder);
     setUpdateBookInfo(false);
   }, [arrayHolder]);
-
 
   // Clears the search text and filters the data accordingly
   function clearFunction() {
@@ -196,6 +228,12 @@ const Collection: React.FC<{ navigation: any }> = ({ navigation }) => {
     setTimeout(() => navigation.navigate("FilterBooks"), 100);
   };
 
+  const refresh = () => {
+    apiPostUser();
+    fetchUsersDataBase();
+    setDataSource(arrayHolder);
+  };
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={chooseTheme(styles, darkTheme, lightTheme).viewStyle}>
@@ -205,15 +243,19 @@ const Collection: React.FC<{ navigation: any }> = ({ navigation }) => {
               <Ionicons name="settings-sharp" size={30} style={chooseTheme(styles, darkTheme, lightTheme).buttonIcon} />
             </TouchableOpacity>
 
-            {dataSource.length < bookInfo.books.length ? (
+            {filteredDataSource.length == 0 ? (  // Check this condition first
+              <TouchableOpacity style={{ ...chooseTheme(styles, darkTheme, lightTheme).button2 }} onPress={refresh}>
+                <Foundation name="refresh" style={chooseTheme(styles, darkTheme, lightTheme).buttonIcon} />
+              </TouchableOpacity>
+            ) : dataSource.length < bookInfo.books.length ? (  // Check this condition second
               <TouchableOpacity style={{ ...chooseTheme(styles, darkTheme, lightTheme).button2 }} onPress={() => navigation.navigate("FilterBooks")}>
                 <AntDesign name="back" style={chooseTheme(styles, darkTheme, lightTheme).buttonIcon} />
               </TouchableOpacity>
-            ) : (
+            ) : dataSource.length === bookInfo.books.length ? (  // Check this condition last
               <TouchableOpacity style={{ ...chooseTheme(styles, darkTheme, lightTheme).button2 }} onPress={openFilterModel}>
                 <MaterialCommunityIcons name="filter" style={chooseTheme(styles, darkTheme, lightTheme).buttonIcon} />
               </TouchableOpacity>
-            )}
+            ) : null}
 
             <TouchableOpacity style={{ ...chooseTheme(styles, darkTheme, lightTheme).button, marginLeft: 10, }} onPress={openScanner}>
               <MaterialCommunityIcons name="barcode-scan" style={chooseTheme(styles, darkTheme, lightTheme).buttonIcon} />
@@ -242,7 +284,7 @@ const Collection: React.FC<{ navigation: any }> = ({ navigation }) => {
           />
 
           <FlatList
-            data={dataSource}
+            data={filteredDataSource}
             ItemSeparatorComponent={ListViewItemSeparator}
             numColumns={3}
             columnWrapperStyle={chooseTheme(styles, darkTheme, lightTheme).columnWrapper}
@@ -259,8 +301,7 @@ const Collection: React.FC<{ navigation: any }> = ({ navigation }) => {
                     </View>
                   </TouchableOpacity>
                 );
-              }
-              else {
+              } else {
                 return (
                   <TouchableOpacity style={chooseTheme(styles, darkTheme, lightTheme).bookContainer2} onPress={() => bookDetails(key)}>
                     <Text style={chooseTheme(styles, darkTheme, lightTheme).textStyle2}>{key}</Text>

@@ -1,7 +1,6 @@
-// Importing necessary modules and components from React, React Native, and other libraries
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useState, useEffect } from "react";
-import { Text, View, StyleSheet, Alert, TouchableOpacity, Modal, Image } from "react-native";
+import { Text, View, Alert, TouchableOpacity, Modal, Image, StyleSheet } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import Scanner from "./Scanner";
 import axios from "axios";
@@ -9,7 +8,7 @@ import { useGlobal } from "../GlobalProvider";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { ROUTE_FOUR, ROUTE_PORT, ROUTE_THREE, ROUTE_TWO } from '@env';
 
-// Defining the interface for BookData
+// Defining the data structure for book information
 interface BookData {
     title: string;
     authors: string;
@@ -21,11 +20,12 @@ interface BookData {
     image: string;
 };
 
-// Defining the type for route props
+// Type definition for route parameters expected by the component
 type CollectionRouteProp = RouteProp<{ params: { bookData: BookData } }, "params">;
 
-// Functional component for displaying book details
+// Functional component to display details about a book
 const BookDetails: React.FC<{ navigation: any }> = ({ navigation }) => {
+    // Global state and functions provided by the GlobalProvider
     const {
         email,
         UID,
@@ -33,46 +33,54 @@ const BookDetails: React.FC<{ navigation: any }> = ({ navigation }) => {
         setScannerModal,
         chooseTheme,
         filterFavorites,
-        setUpdateBookInfo
+        setUpdateBookInfo,
     } = useGlobal();
 
+    // Local state to track if the current book is marked as a favorite
     const [isFavorite, setIsFavorite] = useState<boolean>(true);
+
+    // Extracting book data from the route parameters
     const route = useRoute<CollectionRouteProp>();
     const { bookData } = route.params;
 
-    // Function to add a book to favorites
+    // Function to add the book to the user's list of favorites
     const addToFavorites = async () => {
-        setUpdateBookInfo(true);
         const deleteBook = { userUidDeleting: UID, userDeleting: email, deleteBook: bookData.title };
+        if (Object.values(deleteBook).some(value => value === undefined || value === null)) return;
+        setUpdateBookInfo(true);
+
         try { await axios.post(`http://${ROUTE_PORT}${ROUTE_THREE}`, deleteBook); }
         catch (error) { console.log(error); };
         setIsFavorite(false);
     };
 
-    // Function to remove a book from favorites
+    // Function to remove the book from the user's list of favorites
     const removeFromFavorites = async () => {
-        setUpdateBookInfo(true);
         const deleteBook = { userUidDeleting: UID, userDeleting: email, deleteBook: bookData.title };
+        if (Object.values(deleteBook).some(value => value === undefined || value === null)) return;
+        setUpdateBookInfo(true);
+
         try { await axios.post(`http://${ROUTE_PORT}${ROUTE_FOUR}`, deleteBook); }
         catch (error) { console.log(error); };
         setIsFavorite(true);
     };
 
-    // Function to delete a book
+    // Function to delete the book from the user's collection
     const apiPostDeleteBook = async () => {
-        setUpdateBookInfo(true);
         const deleteBook = { userUidDeleting: UID, userDeleting: email, deleteBook: bookData.title };
-        try { await axios.post(`http://${ROUTE_PORT}${ROUTE_TWO}`, deleteBook); }
+        if (Object.values(deleteBook).some(value => value === undefined || value === null)) return;
+
+        try {
+            await axios.post(`http://${ROUTE_PORT}${ROUTE_TWO}`, deleteBook);
+            setUpdateBookInfo(true);
+            navigation.navigate("Collection");
+        }
         catch (error) { console.log(error); };
     };
 
-    // Function to open the scanner modal
     const openScanner = () => { setScannerModal(true); };
-
-    // Function to close the scanner modal
     const closeScanner = () => { setScannerModal(false); };
 
-    // Displays an alert to confirm the deletion of a book
     const deleteBook = () => {
         Alert.alert("Delete Book", `${bookData.title}`, [
             { text: "NO" },
@@ -80,24 +88,22 @@ const BookDetails: React.FC<{ navigation: any }> = ({ navigation }) => {
         ]);
     };
 
-    // Effect to set the favorite status of the book
+    // Effect hook to check if the book is already in the list of favorites
     useEffect(() => {
         const favoriteTitles = filterFavorites.map(fav => fav.title);
-        if (!favoriteTitles.includes(bookData.title)) { setIsFavorite(true); }
-        else { setIsFavorite(false); };
+        setIsFavorite(!favoriteTitles.includes(bookData.title));
     }, []);
 
-    // Returning the JSX to render the book details screen
     return (
         <SafeAreaProvider>
             <SafeAreaView style={chooseTheme(styles, darkTheme, lightTheme).backgroundImage}>
                 <View style={chooseTheme(styles, darkTheme, lightTheme).buttonContainer}>
-                    {/* Button for navigating back to the Collection */}
+                    {/* Button to navigate back to the collection screen */}
                     <TouchableOpacity style={{ ...chooseTheme(styles, darkTheme, lightTheme).button, marginRight: 10 }} onPress={() => navigation.navigate("Collection")}>
                         <Ionicons name="arrow-back-circle-sharp" style={chooseTheme(styles, darkTheme, lightTheme).buttonIcon} />
                     </TouchableOpacity>
 
-                    {/* Button for adding or removing the book from favorites */}
+                    {/* Button to add or remove the book from favorites */}
                     {isFavorite ? (
                         <TouchableOpacity style={{ ...chooseTheme(styles, darkTheme, lightTheme).button2 }} onPress={addToFavorites}>
                             <MaterialCommunityIcons name="star-check" style={chooseTheme(styles, darkTheme, lightTheme).buttonIcon} />
@@ -108,22 +114,22 @@ const BookDetails: React.FC<{ navigation: any }> = ({ navigation }) => {
                         </TouchableOpacity>
                     )}
 
-                    {/* Button for opening the barcode scanner modal */}
+                    {/* Button to open the barcode scanner modal */}
                     <TouchableOpacity style={{ ...chooseTheme(styles, darkTheme, lightTheme).button, marginLeft: 10 }} onPress={openScanner}>
                         <MaterialCommunityIcons name="barcode-scan" style={chooseTheme(styles, darkTheme, lightTheme).buttonIcon} />
                     </TouchableOpacity>
 
-                    {/* Modal for displaying the barcode scanner */}
+                    {/* Modal to display the barcode scanner */}
                     <Modal visible={scannerModal} animationType="slide">
                         <Scanner navigation={navigation} closeScanner={closeScanner} />
                     </Modal>
                 </View>
 
-                {/* Display book title */}
+                {/* Displaying the book title */}
                 <Text style={chooseTheme(styles, darkTheme, lightTheme).title} minimumFontScale={2} adjustsFontSizeToFit numberOfLines={1}>{bookData.title}</Text>
                 <Text style={chooseTheme(styles, darkTheme, lightTheme).author} minimumFontScale={0.7} adjustsFontSizeToFit numberOfLines={1}>Author: {bookData.authors}</Text>
 
-                {/* Display book image */}
+                {/* Displaying the book cover image */}
                 {bookData.image !== "NO IMAGE" ? (
                     <Image style={chooseTheme(styles, darkTheme, lightTheme).image} source={{ uri: bookData.image }} />
                 ) : (
@@ -132,19 +138,19 @@ const BookDetails: React.FC<{ navigation: any }> = ({ navigation }) => {
                     </View>
                 )}
 
-                {/* Display page count */}
+                {/* Displaying the page count of the book */}
                 <Text style={chooseTheme(styles, darkTheme, lightTheme).pageCount} minimumFontScale={0.7} adjustsFontSizeToFit numberOfLines={1}>Pages: {bookData.pageCount}</Text>
 
-                {/* Display book description */}
+                {/* Displaying the description of the book */}
                 <View style={chooseTheme(styles, darkTheme, lightTheme).textContainer}>
-                    <Text style={chooseTheme(styles, darkTheme, lightTheme).description} minimumFontScale={0.7} adjustsFontSizeToFit numberOfLines={10}>{bookData.description}</Text>
+                    <Text style={chooseTheme(styles, darkTheme, lightTheme).description} minimumFontScale={0.7} adjustsFontSizeToFit numberOfLines={10}>Description: {bookData.description}</Text>
                 </View>
 
-                {/* Display publisher information */}
+                {/* Displaying the publisher information */}
                 <Text style={chooseTheme(styles, darkTheme, lightTheme).publish} minimumFontScale={0.7} adjustsFontSizeToFit numberOfLines={1}>Published by: {bookData.publisher}</Text>
                 <Text style={chooseTheme(styles, darkTheme, lightTheme).publish} minimumFontScale={0.7} adjustsFontSizeToFit numberOfLines={1}>Published date: {bookData.publishedDate}</Text>
 
-                {/* Button for deleting the book */}
+                {/* Button to delete the book from the collection */}
                 <TouchableOpacity style={chooseTheme(styles, darkTheme, lightTheme).deleteContainer} onPress={deleteBook}>
                     <FontAwesome name="trash" style={chooseTheme(styles, darkTheme, lightTheme).buttonIcon} />
                 </TouchableOpacity>
@@ -152,6 +158,7 @@ const BookDetails: React.FC<{ navigation: any }> = ({ navigation }) => {
         </SafeAreaProvider>
     );
 };
+
 
 // Defining the default styles
 const styles = StyleSheet.create({

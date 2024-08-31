@@ -19,11 +19,6 @@ const UserRegistration: React.FC<{ navigation: any }> = ({ navigation }) => {
     chooseTheme,
   } = useGlobal();
 
-  // async function userSignOut() {
-  //   try { const userCredential = await signOut(auth); resetUser(); }
-  //   catch (error: any) { throw error; }
-  // };
-
   async function signUpWithEmailAndPassword(email: string, password: string) {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -34,7 +29,7 @@ const UserRegistration: React.FC<{ navigation: any }> = ({ navigation }) => {
         user.sendEmailVerification()
           .then(() => { Alert.alert("Verify Account", "Please check your email for instructions on of verifying your account.", [{ text: "Close" },]); })
           .catch((error) => { console.error("Error sending email verification:", error); });
-      }
+      };
     }
     catch (error: any) {
       resetUser();
@@ -58,7 +53,7 @@ const UserRegistration: React.FC<{ navigation: any }> = ({ navigation }) => {
         return Alert.alert("Network Connectivity Issue", "Check your internet connection or try again later..", [{ text: "Close" },]);
       };
       throw error;
-    }
+    };
   };
 
   const goToLogInScreen = async () => { resetUser(); setChecked(false); navigation.navigate("LogInMenu"); };

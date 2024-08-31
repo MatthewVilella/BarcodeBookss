@@ -27,7 +27,7 @@ const LogInMenu: React.FC<{ navigation: any }> = ({ navigation }) => {
     closeForgetPassword,
     setTheme,
     chooseTheme,
-    apiPostUser,
+    setUpdateBookInfo,
   } = useGlobal();
   const isFocused = useIsFocused();
 
@@ -101,7 +101,7 @@ const LogInMenu: React.FC<{ navigation: any }> = ({ navigation }) => {
     if (savedUserEmail && savedUserPassword) {
       try { signInWithEmailAndPassword(auth, savedUserEmail, savedUserPassword); }
       catch (error) { console.error("Error authenticating user:", error); };
-    }
+    };
   };
 
   async function userSignOut() {
@@ -113,7 +113,7 @@ const LogInMenu: React.FC<{ navigation: any }> = ({ navigation }) => {
     if (user) {
       if (user.email === email && user?.emailVerified === true) {
         setUID(user.uid);
-        apiPostUser();
+        setUpdateBookInfo(true);
         navigation.replace("Collection");
       };
     };
@@ -128,7 +128,6 @@ const LogInMenu: React.FC<{ navigation: any }> = ({ navigation }) => {
     const theme = await AsyncStorage.getItem("Theme");
     if (theme) { setTheme(theme); };
   };
-
 
   useEffect(() => {
     if (isFocused) {

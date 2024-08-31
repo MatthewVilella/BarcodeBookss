@@ -4,4 +4,6 @@ barcodebooks-bb414-firebase-adminsdk-lkcvm-05b774899a.json
 
 firebaseConfig.js
 
+firebaseServiceAccountKey.json
+
 types/env.d.js

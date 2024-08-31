@@ -106,7 +106,6 @@ export const GlobalProvider: React.FC<GlobalProviderProps> = ({ children, }) => 
   const [isCheckedPublishedDate, setIsCheckedPublishedDate] = useState<boolean>(false);
   const [isCheckedPublisher, setIsCheckedPublisher] = useState<boolean>(false);
 
-
   const resetUser = () => {
     AsyncStorage.setItem("checkBox", "false");
     AsyncStorage.setItem("email", "");
@@ -126,10 +125,11 @@ export const GlobalProvider: React.FC<GlobalProviderProps> = ({ children, }) => 
 
   const apiPostUser = async () => {
     let userInfo = { user: email, userUID: UID };
+    if (Object.values(userInfo).some(value => value === undefined || value === null)) { return; };
+
     try { const res = await axios.post(`http://${ROUTE_PORT}${ROUTE_SIX}`, userInfo); }
     catch (error) { console.log(error); };
   };
-
 
   const openForgetPassword = () => { setForgetPasswordModal(true); };
 
@@ -182,7 +182,6 @@ export const GlobalProvider: React.FC<GlobalProviderProps> = ({ children, }) => 
     isCheckedCategories, setIsCheckedCategories,
     isCheckedPublishedDate, setIsCheckedPublishedDate,
     isCheckedPublisher, setIsCheckedPublisher,
-
   };
 
   return <GlobalContext.Provider value={globalValues}>{children}</GlobalContext.Provider>;

@@ -37,15 +37,14 @@ const FilterModal: React.FC<{ navigation: any, closeCollectionFilter: any, apply
         setChecked(!isChecked);
         if (!isChecked) {
             if (filterFunction == filterFavorites) {
-                if (arrayHolderFilter.some(item => item.hasOwnProperty("favorites"))) { return };
+                if (arrayHolderFilter.some(item => item.hasOwnProperty("favorites"))) { return; };
                 arrayHolderFilter.push({ "favorites": "favorites" });
                 return;
-            }
+            };
             setArrayHolderFilter(arrayHolderFilter.concat(filterFunction));
         }
         else { setArrayHolderFilter(arrayHolderFilter.filter(item => !item.hasOwnProperty(category))); };
     };
-
 
     useEffect(() => { setDataSourceFilter(arrayHolderFilter); }, [arrayHolderFilter, setArrayHolderFilter]);
 
@@ -62,7 +61,6 @@ const FilterModal: React.FC<{ navigation: any, closeCollectionFilter: any, apply
         setIsCheckedPublisher(false);
         setDataSourceFilter(arrayHolderFilter);
     };
-
 
     return (
         <SafeAreaProvider >
@@ -137,7 +135,6 @@ const FilterModal: React.FC<{ navigation: any, closeCollectionFilter: any, apply
                             uncheckedColor={chooseTheme(styles, darkTheme, lightTheme).uncheckColor.color}
                             titleProps={{ style: [chooseTheme(styles, darkTheme, lightTheme).checkColor.color, { color: isCheckedPublisher ? chooseTheme(styles, darkTheme, lightTheme).checkColor.color : chooseTheme(styles, darkTheme, lightTheme).uncheckColor.color }], }}
                         />
-
                     </View>
 
                     <View style={chooseTheme(styles, darkTheme, lightTheme).clearButtonView}>
@@ -145,7 +142,6 @@ const FilterModal: React.FC<{ navigation: any, closeCollectionFilter: any, apply
                             <Text style={chooseTheme(styles, darkTheme, lightTheme).clearButtonText}>Clear</Text>
                         </TouchableOpacity>
                     </View>
-
                 </View>
             </SafeAreaView>
         </SafeAreaProvider>
